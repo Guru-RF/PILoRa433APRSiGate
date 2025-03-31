@@ -63,6 +63,17 @@ led = LED(19)
 pwrled = LED(13)
 pwrled.on()
 
+post_queue = asyncio.Queue()
+
+async def tcp_post_worker(writer):
+    while True:
+        rawdata = await post_queue.get()
+        try:
+            await tcpPost(writer, rawdata)
+        except Exception as e:
+            logger.error(f"tcpPost_worker failed: {e}")
+        post_queue.task_done()
+
 async def led_blink_pattern():
     pattern = [0.2, 0.15, 0.1, 0.07, 0.05, 0.07, 0.1, 0.15, 0.2]
     for duration in pattern:
@@ -137,11 +148,7 @@ async def loraRunner(writer):
                 return
             trigger_led_blink()
             logger.info(f"Received: {rawdata}")
-            try:
-                await tcpPost(writer, rawdata)
-            except Exception as e:
-                logger.error(f"tcpPost failed packet: {e}")
-                raise
+            await post_queue.put(rawdata)  # Queue the packet
         await asyncio.sleep(0)
 
 async def main():
@@ -152,10 +159,12 @@ async def main():
             # Create tasks
             lora_task = asyncio.create_task(loraRunner(writer))
             announce_task = asyncio.create_task(iGateAnnounce(writer))
+            post_worker_task = asyncio.create_task(tcp_post_worker(writer)) 
+
 
             # Wait for one to raise
             done, pending = await asyncio.wait(
-                [lora_task, announce_task],
+                [lora_task, announce_task, post_worker_task],
                 return_when=asyncio.FIRST_EXCEPTION
             )
 
