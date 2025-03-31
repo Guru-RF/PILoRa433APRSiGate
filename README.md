@@ -114,7 +114,7 @@ sudo systemctl status PiAPRSiGate
 
 ## Credits
 
-Built by [Guru-RF](https://github.com/Guru-RF) for experimental APRS use with LoRa on Raspberry Pi.
+Built by [RF.Guru](https://rf.guru) for experimental APRS use with LoRa on Raspberry Pi.
 
 ---
 
