@@ -5,7 +5,7 @@
 syslogHost = "logs4.papertrailapp.com"
 syslogPort = 24262
 # APRS
-call = "ON6URE-5"
+call = "URECALL-5"
 aprs_host = "belgium.aprs2.net"
 aprs_port = 14580
 passcode = "12345"  # https://apps.magicbug.co.uk/passcode/
