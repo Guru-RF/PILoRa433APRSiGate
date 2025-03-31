@@ -1,0 +1,142 @@
+#!/usr/bin/env python3
+
+import asyncio
+import time
+import socket
+import random
+import logging
+from rfc5424logging import Rfc5424SysLogHandler
+
+import RPi.GPIO as GPIO
+
+from datetime import datetime
+
+import board
+import digitalio
+import busio
+import config
+from APRS import APRS
+import rfm9x
+
+# Constants
+VERSION = "APRSiGate"
+RELEASE = "1.0"
+loraTimeout = 900
+
+# Logging
+logger = logging.getLogger(VERSION + "-" + RELEASE)
+logger.setLevel(logging.INFO)
+
+# Create RFC 5424 syslog handler
+handler = Rfc5424SysLogHandler(
+    address=(config.syslogHost, config.syslogPort),
+    hostname='aprs-igate-' + config.call,
+    appname=VERSION + "-" + RELEASE,
+    procid='-',
+    structured_data={
+        'meta@12345': {
+            'site': config.call,
+            'type': 'gateway'
+        }
+    }
+)
+
+logger.addHandler(handler)
+
+# SPI + LoRa setup
+spi = busio.SPI(board.SCK, MOSI=board.MOSI, MISO=board.MISO)
+cs = digitalio.DigitalInOut(board.D7)
+reset = digitalio.DigitalInOut(board.D25)
+rfm9x = rfm9x.RFM9x(spi, cs, reset, 433.775)
+rfm9x.tx_power = 5
+
+# APRS setup
+aprs = APRS()
+rawauthpacket = f"user {config.call} pass {config.passcode} vers {VERSION} {RELEASE}\n"
+
+# LED Setup
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(13, GPIO.OUT)
+
+# System start
+logger.info("System online")
+
+async def trigger_led_blink():
+    try:
+        with open("/tmp/ledpipe", "w") as fifo:
+            fifo.write("blink\n")
+    except Exception as e:
+        logger.warning(f"LED trigger failed: {e}")
+
+async def connect_aprs():
+    while True:
+        try:
+            reader, writer = await asyncio.open_connection(config.aprs_host, config.aprs_port)
+            writer.write(rawauthpacket.encode())
+            await writer.drain()
+            logger.info("Connected to APRS-IS")
+            return reader, writer
+        except Exception as e:
+            logger.error(f"TCP connect failed: {e}")
+            await asyncio.sleep(10)
+
+async def iGateAnnounce(writer):
+    while True:
+        now = datetime.utcnow()
+        pos = aprs.makePosition(config.latitude, config.longitude, -1, -1, config.symbol)
+        ts = aprs.makeTimestamp("z", now.day, now.hour, now.minute, now.second)
+        altitude = "/A={:06d}".format(int(config.altitude * 3.2808399))
+        comment = f"{VERSION}.{RELEASE} {config.comment}{altitude}"
+        packet = f"{config.call}>APRFGI,TCPIP*:@{ts}{pos}{comment}\n"
+
+        try:
+            writer.write(packet.encode())
+            await writer.drain()
+            logger.info("Sent iGate status")
+        except Exception as e:
+            logger.error(f"iGateAnnounce send failed: {e}")
+            raise e
+
+        await asyncio.sleep(15 * 60)
+
+async def tcpPost(writer, rawdata):
+    packet = f"{rawdata}\n"
+    try:
+        writer.write(packet.encode())
+        await writer.drain()
+        logger.info(f"Sent packet: {rawdata}")
+    except Exception as e:
+        logger.error(f"tcpPost failed: {e}")
+        raise e
+
+async def loraRunner(writer):
+    while True:
+        timeout = int(loraTimeout) + random.randint(1, 9)
+        logger.info(f"Waiting for packet, timeout {timeout}")
+        packet = rfm9x.receive(timeout=timeout)
+
+        if packet and packet[:3] == b"<\xff\x01":
+            try:
+                rawdata = packet[3:].decode("utf-8")
+                await trigger_led_blink()
+                logger.info(f"Received: {rawdata}")
+                await tcpPost(writer, rawdata)
+            except Exception as e:
+                logger.warning(f"Error decoding packet: {e}")
+        await asyncio.sleep(0)
+
+async def main():
+    while True:
+        try:
+            reader, writer = await connect_aprs()
+            await asyncio.gather(
+                loraRunner(writer),
+                iGateAnnounce(writer)
+            )
+        except Exception as e:
+            logger.error(f"Main loop error: {e}, reconnecting...")
+            await asyncio.sleep(5)
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
