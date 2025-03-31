@@ -117,6 +117,7 @@ async def loraRunner(writer):
                 await tcpPost(writer, rawdata)
             except Exception as e:
                 logger.warning(f"Error decoding packet: {e}")
+                raise e
         await asyncio.sleep(0)
 
 async def main():
