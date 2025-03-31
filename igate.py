@@ -62,7 +62,7 @@ async def trigger_led_blink():
         with open("/tmp/ledpipe", "w") as fifo:
             fifo.write("blink\n")
     except Exception as e:
-        logger.warning(f"LED trigger failed: {e}")
+        logger.error(f"LED trigger failed: {e}")
 
 async def connect_aprs():
     while True:
@@ -83,9 +83,9 @@ async def keepaliveLoop(writer):
             packet = f"{config.call}>APRS,TCPIP*:{{KEEPALIVE}}\n"
             writer.write(packet.encode())
             await writer.drain()
-            logger.debug("Sent keepalive")
+            logger.info("Sent keepalive")
         except Exception as e:
-            logger.warning(f"Keepalive failed: {e}")
+            logger.error(f"Keepalive failed: {e}")
             raise e
 
         await asyncio.sleep(30)  # every 30 seconds
@@ -129,14 +129,14 @@ async def loraRunner(writer):
             try:
                 rawdata = packet[3:].decode("utf-8")
             except Exception as e:
-                logger.warning(f"Error decoding packet: {e}")
+                logger.error(f"Error decoding packet: {e}")
                 return
             await trigger_led_blink()
             logger.info(f"Received: {rawdata}")
             try:
                 await tcpPost(writer, rawdata)
             except Exception as e:
-                logger.warning(f"tcpPost failed packet: {e}")
+                logger.error(f"tcpPost failed packet: {e}")
                 raise
         await asyncio.sleep(0)
 
@@ -166,7 +166,7 @@ async def main():
             writer.close()
             await writer.wait_closed()
 
-            logger.warning("Disconnected, retrying...")
+            logger.error("Disconnected, retrying...")
             await asyncio.sleep(1)
 
         except Exception as e:
