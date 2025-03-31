@@ -7,8 +7,6 @@ import random
 import logging
 from rfc5424logging import Rfc5424SysLogHandler
 
-import RPi.GPIO as GPIO
-
 from datetime import datetime
 
 import board
@@ -53,10 +51,6 @@ rfm9x.tx_power = 5
 # APRS setup
 aprs = APRS()
 rawauthpacket = f"user {config.call} pass {config.passcode} vers {VERSION} {RELEASE}\n"
-
-# LED Setup
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(13, GPIO.OUT)
 
 # System start
 logger.info("System online")
