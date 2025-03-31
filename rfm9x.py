@@ -976,7 +976,6 @@ class RFM9x:
 
     async def areceive(
         self,
-        w,
         *,
         keep_listening: bool = True,
         with_header: bool = False,
