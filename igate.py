@@ -68,6 +68,14 @@ async def connect_aprs():
     while True:
         try:
             reader, writer = await asyncio.open_connection(config.aprs_host, config.aprs_port)
+
+            # Get the underlying socket and enable TCP keepalive
+            sock = writer.get_extra_info('socket')
+            if sock is not None:
+              sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+              sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 300)    # seconds before starting keepalive
+              sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 30)    # interval between keepalives
+              sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 5)       # fail after 5 missed probes
             writer.write(rawauthpacket.encode())
             await writer.drain()
             logger.info("Connected to APRS-IS")
