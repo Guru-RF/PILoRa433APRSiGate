@@ -76,6 +76,20 @@ async def connect_aprs():
             logger.error(f"TCP connect failed: {e}")
             await asyncio.sleep(10)
 
+async def keepaliveLoop(writer):
+    while True:
+        try:
+            # This is a harmless APRS comment packet that won't show up on the map
+            packet = f"{config.call}>APRS,TCPIP*:{{KEEPALIVE}}\n"
+            writer.write(packet.encode())
+            await writer.drain()
+            logger.debug("Sent keepalive")
+        except Exception as e:
+            logger.warning(f"Keepalive failed: {e}")
+            raise e
+
+        await asyncio.sleep(180)  # every 3 minutes
+
 async def iGateAnnounce(writer):
     while True:
         now = datetime.utcnow()
@@ -130,10 +144,11 @@ async def main():
             # Create tasks
             lora_task = asyncio.create_task(loraRunner(writer))
             announce_task = asyncio.create_task(iGateAnnounce(writer))
+            keepalive_task = asyncio.create_task(keepaliveLoop(writer))
 
             # Wait for one to raise
             done, pending = await asyncio.wait(
-                [lora_task, announce_task],
+                [lora_task, announce_task, keepalive_task],
                 return_when=asyncio.FIRST_EXCEPTION
             )
 
