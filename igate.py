@@ -74,7 +74,7 @@ async def connect_aprs():
             return reader, writer
         except Exception as e:
             logger.error(f"TCP connect failed: {e}")
-            await asyncio.sleep(10)
+            raise e
 
 async def keepaliveLoop(writer):
     while True:
