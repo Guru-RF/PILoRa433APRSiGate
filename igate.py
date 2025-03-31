@@ -21,7 +21,7 @@ import contextlib
 # Constants
 VERSION = "APRSiGate"
 RELEASE = "1.0"
-loraTimeout = 900
+loraTimeout = config.LoRaTimeout
 
 # Logging
 logger = logging.getLogger(VERSION + "-" + RELEASE)
