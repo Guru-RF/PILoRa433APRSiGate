@@ -16,6 +16,8 @@ import config
 from APRS import APRS
 import rfm9x
 
+import contextlib
+
 # Constants
 VERSION = "APRSiGate"
 RELEASE = "1.0"
@@ -124,13 +126,33 @@ async def main():
     while True:
         try:
             reader, writer = await connect_aprs()
-            await asyncio.gather(
-                loraRunner(writer),
-                iGateAnnounce(writer)
+
+            # Create tasks
+            lora_task = asyncio.create_task(loraRunner(writer))
+            announce_task = asyncio.create_task(iGateAnnounce(writer))
+
+            # Wait for one to raise
+            done, pending = await asyncio.wait(
+                [lora_task, announce_task],
+                return_when=asyncio.FIRST_EXCEPTION
             )
+
+            # Cancel remaining tasks
+            for task in pending:
+                task.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await task
+
+            # Close writer
+            writer.close()
+            await writer.wait_closed()
+
+            logger.warning("Disconnected, retrying...")
+            await asyncio.sleep(1)
+
         except Exception as e:
-            logger.error(f"Main loop error: {e}, reconnecting...")
-            await asyncio.sleep(5)
+            logger.error(f"Main loop exception: {e}, retrying ...")
+            await asyncio.sleep(1)
 
 if __name__ == "__main__":
     asyncio.run(main())
