@@ -122,18 +122,22 @@ async def tcpPost(writer, rawdata):
 async def loraRunner(writer):
     while True:
         timeout = int(loraTimeout) + random.randint(1, 9)
-        logger.info(f"Waiting for packet, timeout {timeout}")
+        logger.info(f"LoRa RX waiting for packet, timeout {timeout}s")
         packet = rfm9x.receive(timeout=timeout)
 
         if packet and packet[:3] == b"<\xff\x01":
             try:
                 rawdata = packet[3:].decode("utf-8")
-                await trigger_led_blink()
-                logger.info(f"Received: {rawdata}")
-                await tcpPost(writer, rawdata)
             except Exception as e:
                 logger.warning(f"Error decoding packet: {e}")
-                raise e
+                return
+            await trigger_led_blink()
+            logger.info(f"Received: {rawdata}")
+            try:
+                await tcpPost(writer, rawdata)
+            except Exception as e:
+                logger.warning(f"tcpPost failed packet: {e}")
+                raise
         await asyncio.sleep(0)
 
 async def main():
