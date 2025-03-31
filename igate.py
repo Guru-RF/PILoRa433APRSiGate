@@ -157,6 +157,10 @@ async def main():
                 return_when=asyncio.FIRST_EXCEPTION
             )
 
+            for task in done:
+              if task.exception():
+                logger.error(f"Task {task.get_coro().__name__} raised: {task.exception()}") 
+
             # Cancel remaining tasks
             for task in pending:
                 task.cancel()
