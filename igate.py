@@ -123,7 +123,8 @@ async def loraRunner(writer):
     while True:
         timeout = int(loraTimeout) + random.randint(1, 9)
         logger.info(f"LoRa RX waiting for packet, timeout {timeout}s")
-        packet = await rfm9x.areceive(timeout=timeout)
+        packet = await rfm9x.areceive( with_header=True, timeout=timeout)
+        logger.info(f"done waiting LoRa RX waiting for packet, timeout {timeout}s")
 
         if packet and packet[:3] == b"<\xff\x01":
             try:
