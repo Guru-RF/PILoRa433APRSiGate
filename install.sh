@@ -48,6 +48,9 @@ Description=$APP_NAME Service
 After=ledworker.service network.target
 
 [Service]
+ExecStartPre=/bin/sh -c 'sysctl -w net.ipv4.tcp_keepalive_time=300'
+ExecStartPre=/bin/sh -c 'sysctl -w net.ipv4.tcp_keepalive_intvl=30'
+ExecStartPre=/bin/sh -c 'sysctl -w net.ipv4.tcp_keepalive_probes=5'
 ExecStart=/usr/bin/python3 $INSTALL_DIR/igate.py
 WorkingDirectory=$INSTALL_DIR
 StandardOutput=journal
