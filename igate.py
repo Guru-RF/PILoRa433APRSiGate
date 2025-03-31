@@ -88,7 +88,7 @@ async def keepaliveLoop(writer):
             logger.warning(f"Keepalive failed: {e}")
             raise e
 
-        await asyncio.sleep(180)  # every 3 minutes
+        await asyncio.sleep(30)  # every 30 seconds
 
 async def iGateAnnounce(writer):
     while True:
