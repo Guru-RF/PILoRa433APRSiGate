@@ -18,6 +18,8 @@ import rfm9x
 
 import contextlib
 
+from gpiozero import LED
+
 # Constants
 VERSION = "APRSiGate"
 RELEASE = "1.0"
@@ -57,12 +59,20 @@ rawauthpacket = f"user {config.call} pass {config.passcode} vers {VERSION} {RELE
 # System start
 logger.info("System online")
 
-async def trigger_led_blink():
-    try:
-        with open("/tmp/ledpipe", "w") as fifo:
-            fifo.write("blink\n")
-    except Exception as e:
-        logger.error(f"LED trigger failed: {e}")
+led = LED(19)
+pwrled = LED(13)
+pwrled.on()
+
+async def led_blink_pattern():
+    pattern = [0.2, 0.15, 0.1, 0.07, 0.05, 0.07, 0.1, 0.15, 0.2]
+    for duration in pattern:
+        led.on()
+        await asyncio.sleep(duration)
+        led.off()
+        await asyncio.sleep(duration)
+
+def trigger_led_blink():
+    asyncio.create_task(led_blink_pattern())
 
 async def connect_aprs():
     while True:
@@ -118,7 +128,6 @@ async def loraRunner(writer):
         timeout = int(loraTimeout) + random.randint(1, 9)
         logger.info(f"LoRa RX waiting for packet, timeout {timeout}s")
         packet = await rfm9x.areceive( with_header=True, timeout=timeout)
-        logger.info(f"done waiting LoRa RX waiting for packet, timeout {timeout}s")
 
         if packet and packet[:3] == b"<\xff\x01":
             try:
@@ -126,7 +135,7 @@ async def loraRunner(writer):
             except Exception as e:
                 logger.error(f"Error decoding packet: {e}")
                 return
-            await trigger_led_blink()
+            trigger_led_blink()
             logger.info(f"Received: {rawdata}")
             try:
                 await tcpPost(writer, rawdata)
