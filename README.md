@@ -43,7 +43,7 @@ chmod +x install.sh
 > This will:
 > - Install Python dependencies
 > - Copy files to `/opt/PiAPRSiGate`
-> - Set up two systemd services: `ledworker.service` and `PiAPRSiGate.service`
+> - Set systemd service: `PiAPRSiGate.service`
 
 ---
 
@@ -77,21 +77,18 @@ LoRaTimeout = 900
 Start manually: (first time you need to reboot to activate the SPI on the PI!)
 
 ```bash
-sudo systemctl start ledworker
 sudo systemctl start PiAPRSiGate
 ```
 
 Enable on boot:
 
 ```bash
-sudo systemctl enable ledworker
 sudo systemctl enable PiAPRSiGate
 ```
 
 Check status:
 
 ```bash
-sudo systemctl status ledworker
 sudo systemctl status PiAPRSiGate
 ```
 
@@ -102,7 +99,6 @@ sudo systemctl status PiAPRSiGate
 ```
 .
 ├── igate.py           # Main iGate logic 
-├── ledworker.py       # Dedicated LED blink handler
 ├── APRS.py            # APRS utility class
 ├── config.py          # Your callsign, location, and settings
 ├── rfm9x.py           # LoRa driver 
