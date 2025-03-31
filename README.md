@@ -67,6 +67,7 @@ aprs_port = 14580
 
 syslogHost = "your.syslog.server"
 syslogPort = 514
+LoRaTimeout = 900
 ```
 
 ---

@@ -15,4 +15,4 @@ altitude = 5  # in meters
 comment = "https://rf.guru"
 # iGate symbol
 symbol = "R&"
-LoRaTimeout = 30
+LoRaTimeout = 900 # default 900
