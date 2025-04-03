@@ -55,9 +55,9 @@ Edit `/opt/PiAPRSiGate/config.py` to match your callsign, location, APRS passcod
 # config.py
 
 call = "ON6URE-5"
-passcode = "12345"  # Your APRS-IS passcode
-latitude = "50.8503N"
-longitude = "4.3517E"
+passcode = "12345"  # https://apps.magicbug.co.uk/passcode/
+latitude = 51.150000
+longitude = 2.770000
 altitude = 10  # in meters
 symbol = "/R"  # Antenna symbol
 comment = "PiLoRa iGate"
