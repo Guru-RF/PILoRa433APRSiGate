@@ -54,7 +54,7 @@ Edit `/opt/PiAPRSiGate/config.py` to match your callsign, location, APRS passcod
 ```python
 # config.py
 
-call = "ON6URE-5"
+call = "URECALL-5"
 passcode = "12345"  # https://apps.magicbug.co.uk/passcode/
 latitude = 51.150000
 longitude = 2.770000
