@@ -145,7 +145,7 @@ async def loraRunner(writer):
                 rawdata = packet[3:].decode("utf-8")
             except Exception as e:
                 logger.error(f"Error decoding packet: {e}")
-                return
+                continue
             trigger_led_blink()
             logger.info(f"Received: {rawdata}")
             await post_queue.put(rawdata)  # Queue the packet
