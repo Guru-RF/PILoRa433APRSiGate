@@ -24,7 +24,7 @@ echo "🛠️ Creating main APRSiGate service..."
 sudo tee "$SERVICE_FILE" > /dev/null <<EOF
 [Unit]
 Description=$APP_NAME Service
-After=ledworker.service network.target
+After=network.target
 StartLimitIntervalSec=60
 StartLimitBurst=5
 
