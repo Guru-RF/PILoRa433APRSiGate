@@ -25,6 +25,8 @@ sudo tee "$SERVICE_FILE" > /dev/null <<EOF
 [Unit]
 Description=$APP_NAME Service
 After=ledworker.service network.target
+StartLimitIntervalSec=60
+StartLimitBurst=5
 
 [Service]
 ExecStart=/usr/bin/python3 $INSTALL_DIR/igate.py
