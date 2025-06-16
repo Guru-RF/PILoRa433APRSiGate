@@ -5,7 +5,7 @@ INSTALL_DIR="/opt/$APP_NAME"
 SERVICE_FILE="/etc/systemd/system/$APP_NAME.service"
 USER=$(whoami)
 
-echo "🚀 Installing $APP_NAME and LED worker as system services..."
+echo "🚀 Installing $APP_NAME as system services..."
 
 # Run dependencies
 echo "📦 Installing Python dependencies..."
