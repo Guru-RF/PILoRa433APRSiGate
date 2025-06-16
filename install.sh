@@ -34,6 +34,7 @@ WorkingDirectory=$INSTALL_DIR
 StandardOutput=journal
 StandardError=journal
 Restart=always
+RestartSec=10
 User=$USER
 
 [Install]
